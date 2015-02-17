@@ -1,0 +1,52 @@
+#!/bin/sh
+
+fnm_ext=${0##*/}
+fnm=${fnm_ext%.*}
+ext=${fnm_ext##*.}
+fpath=${0%/*}
+
+# echo ${fpath}
+
+olog=${fnm}_out.log
+elog=${fnm}_err.log
+fetch_on=0
+
+echo "--- start  pre-receive. ---"
+
+# from remote 
+remote_head=`git ls-remote --heads -q|sed -n -e /master/p|cut -f 1`
+
+# from local 
+fetch_head=`git show-ref --heads|sed -n -e /master/p|cut -f 1 -d " "`
+
+echo ${remote_head}
+echo ${fetch_head}
+
+if [ "${remote_head}" != "${fetch_head}" ]; then
+  #need fetch and pull first
+
+  # nohup git fetch --all > ${fpath}/${olog} 2>${fpath}/${elog} </dev/null &
+  nohup git fetch --all > /dev/null < /dev/null &
+
+  fetch_on=-1
+fi
+
+if [ ${fetch_on} -ne 0 ]; then
+  echo "now git fetch --all in mirror server...." 
+
+  echo "--- hint ---"
+  echo "Updates were rejected because the remote contains work that you do"
+  echo "not have locally. This is usually caused by another repository pushing"
+  echo "to the same ref. You may want to first integrate the remote changes"
+  echo "(e.g., 'git pull ...') before pushing again."
+  echo "See the 'Note about fast-forwards' in 'git push --help' for details."
+  echo "--- hint ---"
+else
+  echo "up-to-date : this message from mirror server."
+fi
+
+echo "--- finish pre-receive. ---"
+
+
+exit ${fetch_on}
+

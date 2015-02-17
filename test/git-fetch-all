@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo git-fetch-all start
+
+# git fetch --all > out.log 2>err.log < /dev/null 
+
+nohup git fetch --all &
+
+echo git-fetch-all end
+
+exit -1

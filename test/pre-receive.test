@@ -1,0 +1,70 @@
+#!/bin/sh
+
+fnm_ext=${0##*/}
+fnm=${fnm_ext%.*}
+ext=${fnm_ext##*.}
+fpath=${0%/*}
+
+echo ${fpath}
+
+olog=${fnm}_out.log
+elog=${fnm}_err.log
+
+echo "start git fetch --all in pre-receive hook."
+
+fetch_on=0
+
+# from remote 
+remote_head=`git ls-remote --heads -q|sed -n -e /master/p|cut -f 1`
+# remote_head=`sudo -u core -H git ls-remote --heads -q|sed -n -e /master/p|cut -f 1`
+
+# from local 
+#fetch_head=`cat FETCH_HEAD|sed -n -e /master/p|cut -f 1`
+fetch_head=`git show-ref --heads|sed -n -e /master/p|cut -f 1 -d " "`
+# fetch_head=`sudo -u core -H git show-ref --heads|sed -n -e /master/p|cut -f 1 -d " "`
+
+  echo ${remote_head}
+  echo ${fetch_head}
+  #need fetch and pull first
+if [ "${remote_head}" != "${fetch_head}" ]; then
+  fetch_on=1
+fi
+
+if [ ${fetch_on} -ne 0 ]; then
+  #hooks/git-fetch-all &
+
+  # nohup git fetch --all  &
+
+  # nohup git fetch --all > ${olog} 2>${elog} </dev/null &
+  # nohup git fetch --all > ${fpath}/${olog} 2>${fpath}/${elog} </dev/null &
+
+  nohup git fetch --all & > /dev/null < /dev/null &
+  # nohup git fetch --all > /dev/null  </dev/null &
+
+  # nohup git fetch --all </dev/null &
+  # nohup sudo -u core -H git fetch --all > ${olog} 2>${elog} </dev/null &
+
+  # nohup git ls-remote --heads &
+
+  ### nohup ${fpath}/git-fetch-all &
+
+  # nohup git fetch --all > ${olog} 2>${elog} &
+  # nohup git fetch --all &
+
+  echo "now git fetch --all in mirror server." 
+  echo "please git pull first. maybe..."
+  echo "warning : " $fetch_on
+
+  # test change exec
+  # exec nohup ${fpath}/git-fetch-all &
+  # echo "changed exec no fork."
+
+  exit $fetch_on 
+fi
+ 
+echo "end   git fetch --all in pre-receive hook."
+
+echo "up-to-date : this message from mirror server."
+
+exit $fetch_on
+

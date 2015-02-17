@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# echo param : "$*" > ~/post_receive_param.txt
+
+# nohup git push --mirror &
+nohup git push --mirror & >/dev/null </dev/null &
+
+exit 0
