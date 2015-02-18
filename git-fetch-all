@@ -1,0 +1,20 @@
+#!/bin/sh
+
+mypath=${0%/*}
+uppath=${mypath%/*}
+
+#echo mypath=${mypath}
+#echo uppath=${uppath}
+
+echo git-fetch-all start
+
+# git fetch --all > out.log 2>err.log < /dev/null 
+# nohup git fetch --all &
+
+cd ${uppath}
+
+sudo -u core -H git fetch --all > /dev/null 2>&1 < /dev/null 
+
+echo git-fetch-all end
+
+exit 0

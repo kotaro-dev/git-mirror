@@ -24,9 +24,17 @@ echo ${fetch_head}
 
 if [ "${remote_head}" != "${fetch_head}" ]; then
   #need fetch and pull first
-
   # nohup git fetch --all > ${fpath}/${olog} 2>${fpath}/${elog} </dev/null &
-  nohup git fetch --all > /dev/null < /dev/null &
+
+  sysd_flg=0
+  chksysd=`systemctl --version` > /dev/null 2>&1
+  sysd_flg=$?
+
+  if [ ${sysd_flg} -eq 0 ]; then
+    nohup sudo systemd-run ${fpath}/git-fetch-all > /dev/null 2>&1 < /dev/null &
+  else
+    nohup git fetch --all > /dev/null 2>&1 < /dev/null &
+  fi
 
   fetch_on=-1
 fi
@@ -49,4 +57,5 @@ echo "--- finish pre-receive. ---"
 
 
 exit ${fetch_on}
+
 
