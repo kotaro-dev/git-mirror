@@ -10,8 +10,9 @@ now configure file only ...
    | (no hooks)         | <- 'push'
    |                    |
    |                    | hooks/                +   crontab
-   |                    |   pre-receive  *[1]         fetch
-   |                    |   post-receive *[2]
+   |                    |   pre-receive   *[1]         fetch
+   |                    |   post-receive  *[2]
+   |                    |   git-fetch-all *[3]
    |                    |
    |                    |
  [clone-01]           [clone-02]
@@ -39,19 +40,37 @@ mirror test repo : git@github.com:kotaro-dev/timechk.git
  vim hooks/pre-receive
  ----
  #!/bin/sh
-master_head=`git ls-remote --heads -q|sed -n -e /master/p|cut -f 1`
-slave_head=`git show-ref --heads|sed -n -e /master/p|cut -f 1 -d " "`
-if [ "${master_head}" != "${slave_head}" ]; then
-  nohup git fetch --all > /dev/null < /dev/null &
-  exit -1
-fi
+ master_head=`git ls-remote --heads -q|sed -n -e /master/p|cut -f 1`
+ slave_head=`git show-ref --heads|sed -n -e /master/p|cut -f 1 -d " "`
+ if [ "${master_head}" != "${slave_head}" ]; then
+
+   # if os use systemctl, cant work nohup xxx &. so ...
+   chksysd=`systemctl --version` > /dev/null 2>&1
+   if [ "${chksysd}" != "" ]; then
+     nohup sudo systemd-run ${fpath}/git-fetch-all > /dev/null 2>&1 < /dev/null &
+   else
+     nohup git fetch --all > /dev/null 2>&1 < /dev/null &
+   fi
+
+   exit -1
+ fi
  ----
  
  vim hooks/post-receive
  ----
  #!/bin/sh
- nohup git push --mirror & >/dev/null </dev/null &
-----
+ nohup git push --mirror & > /dev/null 2>&1 < /dev/null &
+ ----
+ 
+ (if work on systmctl)
+ vim hooks/git-fetch-all
+ ----
+ #!/bin/sh
+ mypath=${0%/*}
+ uppath=${mypath%/*}
+ cd ${uppath}
+ sudo -u core -H git fetch --all > /dev/null 2>&1 < /dev/null
+ ----
 ```
 3.configure .ssh/config
  (in mirror server)
@@ -94,3 +113,23 @@ fi
  (3): git pull
  (you will get mrr01.txt from github(master server).)
 ```
+
+#### modification
+
+Change for systemctl system.  
+in this os, i can't use 'nohup xxx &' for working in the background.  
+So i use systemd-run to work a deamon.  
+
+#### note
+
+ coreos に対して ssh 接続して background job を実行して exit すると  
+ background 処理のはずが、kill されて想定通りの動作が行われなかった。  
+ 最終的に、systemd-run で 処理を実行することで 希望通りの 動作を実現できた。  
+ ×: nohup git fetch --all &  
+ ○: nohup sudo systemd-run git fetch --all &  
+    (need change directory in your git bare repo.)   
+ 参考までに、systemd-run で実行して 正常終了以外の status で終わると failed log が残り  
+ teraterm等で接続するたびに failed したservice のリストが表示される。  
+ sudo systemctl reset-failed  
+ 上記コマンドで reset 出来る。(反映させるのに少々時間がかかった。)  
+ 
