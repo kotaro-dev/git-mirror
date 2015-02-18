@@ -3,6 +3,7 @@
 # echo param : "$*" > ~/post_receive_param.txt
 
 # nohup git push --mirror &
-nohup git push --mirror & >/dev/null </dev/null &
+# nohup git push --mirror & >/dev/null </dev/null &
+git push --mirror >/dev/null 2>&1 </dev/null 
 
 exit 0

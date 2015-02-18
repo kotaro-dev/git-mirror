@@ -59,7 +59,7 @@ mirror test repo : git@github.com:kotaro-dev/timechk.git
  vim hooks/post-receive
  ----
  #!/bin/sh
- nohup git push --mirror & > /dev/null 2>&1 < /dev/null &
+ git push --mirror > /dev/null 2>&1 < /dev/null
  ----
  
  (if work on systmctl)
